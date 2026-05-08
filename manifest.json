@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "DesignNote",
+  "version": "1.0.0",
+  "description": "Annotate UI elements and generate structured prompts for Claude",
+  "permissions": ["activeTab", "tabs", "storage", "scripting"],
+  "action": {
+    "default_title": "Toggle DesignNote (Ctrl+Shift+D)"
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["src/content/index.tsx"],
+      "run_at": "document_idle"
+    }
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+D",
+        "mac": "Ctrl+Shift+D"
+      },
+      "description": "Toggle DesignNote sidebar"
+    }
+  }
+}
