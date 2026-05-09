@@ -62,11 +62,11 @@ export const SIDEBAR_CSS = `
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 14px 14px 0;
+    padding: 14px 12px 0;
     flex-shrink: 0;
   }
   .dn-toolbar-left { display: flex; align-items: center; gap: 8px; }
-  .dn-toolbar-right { display: flex; align-items: center; gap: 4px; }
+  .dn-toolbar-right { display: flex; align-items: center; gap: 2px; }
 
   .dn-logo {
     display: flex;
@@ -94,36 +94,105 @@ export const SIDEBAR_CSS = `
     letter-spacing: 0;
   }
 
+  /* Icon-only view toggle buttons (embed, responsive) */
+  .dn-view-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: #555;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .dn-view-btn:hover { color: #999; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.09); }
+  .dn-view-btn.active { color: #c49aff; background: rgba(143,85,249,0.12); border-color: rgba(143,85,249,0.30); }
+
+  .dn-toolbar-sep {
+    width: 1px;
+    height: 16px;
+    background: rgba(255,255,255,0.09);
+    margin: 0 2px;
+    flex-shrink: 0;
+  }
+
   /* Toolbar controls row */
   .dn-toolbar-controls {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 10px 14px 0;
+    gap: 8px;
+    padding: 9px 12px 0;
     flex-shrink: 0;
   }
-  .dn-control-btn {
+
+  /* Select / Pause toggle button */
+  .dn-select-btn {
     display: flex;
     align-items: center;
-    gap: 5px;
-    background: rgba(255,255,255,0.06);
+    gap: 6px;
+    background: none;
     border: 1px solid rgba(255,255,255,0.10);
     border-radius: 8px;
-    color: #999;
-    font-size: 11px;
+    font-size: 12px;
     font-weight: 500;
     font-family: inherit;
-    padding: 5px 9px;
+    padding: 5px 11px;
     cursor: pointer;
-    transition: border-color 0.15s, color 0.15s, background 0.15s;
-    white-space: nowrap;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
   }
-  .dn-control-btn:hover { border-color: rgba(143,85,249,0.4); color: #ccc; }
-  .dn-control-btn.active {
-    border-color: #8F55F9;
+  .dn-select-btn.selecting {
     color: #c49aff;
-    background: rgba(143,85,249,0.12);
+    background: rgba(143,85,249,0.10);
+    border-color: rgba(143,85,249,0.30);
   }
+  .dn-select-btn.selecting:hover {
+    background: rgba(143,85,249,0.16);
+    border-color: rgba(143,85,249,0.45);
+  }
+  .dn-select-btn.paused {
+    color: #777;
+    background: rgba(255,255,255,0.04);
+    border-color: rgba(255,255,255,0.10);
+  }
+  .dn-select-btn.paused:hover {
+    color: #bbb;
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(255,255,255,0.16);
+  }
+
+  .dn-session-pill {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 0;
+    background: rgba(143,85,249,0.10);
+    border: 1px solid rgba(143,85,249,0.25);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  .dn-session-count {
+    font-size: 11px;
+    font-weight: 700;
+    color: #c49aff;
+    padding: 3px 7px 3px 8px;
+    line-height: 1;
+  }
+  .dn-session-clear {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    border-left: 1px solid rgba(143,85,249,0.20);
+    color: #7a5aaa;
+    cursor: pointer;
+    padding: 4px 6px;
+    transition: color 0.15s, background 0.15s;
+  }
+  .dn-session-clear:hover { color: #f87171; background: rgba(248,113,113,0.10); }
   .dn-scale-select {
     flex: 1;
     background: rgba(255,255,255,0.06);
@@ -264,6 +333,11 @@ export const SIDEBAR_CSS = `
     color: #444;
     text-align: center;
   }
+  .dn-empty--inline {
+    height: 140px;
+    border: 1px dashed rgba(255,255,255,0.07);
+    border-radius: 10px;
+  }
   .dn-empty-icon { font-size: 22px; }
   .dn-empty-text { font-size: 12px; line-height: 1.6; color: #777777; }
 
@@ -374,11 +448,9 @@ export const SIDEBAR_CSS = `
     padding: 10px 12px 12px;
   }
   .dn-section-label {
-    font-size: 10px;
-    font-weight: 700;
-    color: #6a6a6a;
-    text-transform: uppercase;
-    letter-spacing: 0.1em;
+    font-size: 11px;
+    font-weight: 600;
+    color: #606060;
     margin-bottom: 9px;
   }
 
@@ -578,17 +650,131 @@ export const SIDEBAR_CSS = `
   .dn-shadow-btn:hover:not(.active) { border-color: rgba(255,255,255,0.18); color: #ccc; }
 
   /* Prompt panel */
-  .dn-prompt-panel { padding: 14px; display: flex; flex-direction: column; gap: 12px; }
+  .dn-prompt-panel { padding: 14px; display: flex; flex-direction: column; gap: 10px; }
   .dn-section-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: #6a6a6a;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
+    font-size: 12px;
+    font-weight: 600;
+    color: #777;
+    letter-spacing: -0.01em;
   }
+
+  .dn-prompt-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .dn-prompt-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  .dn-prompt-action-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    background: none;
+    border: 1px solid transparent;
+    border-radius: 7px;
+    color: #555;
+    cursor: pointer;
+    transition: color 0.15s, background 0.15s, border-color 0.15s;
+  }
+  .dn-prompt-action-btn:hover { color: #aaa; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.09); }
+  .dn-prompt-action-btn.active { color: #c49aff; background: rgba(143,85,249,0.12); border-color: rgba(143,85,249,0.35); }
+  .dn-prompt-regen { color: #6a9a6a; }
+  .dn-prompt-regen:hover { color: #86c986 !important; background: rgba(34,197,94,0.08) !important; border-color: rgba(34,197,94,0.25) !important; }
+
+  .dn-prompt-subpanel {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.07);
+    border-radius: 10px;
+    padding: 10px 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .dn-prompt-subpanel-label {
+    font-size: 11px;
+    font-weight: 600;
+    color: #666;
+  }
+  .dn-prompt-subpanel-empty {
+    font-size: 12px;
+    color: #555;
+    font-style: italic;
+    padding: 4px 0;
+  }
+  .dn-prompt-subpanel-reset {
+    background: none;
+    border: none;
+    color: #555;
+    font-size: 11px;
+    font-family: inherit;
+    cursor: pointer;
+    padding: 0;
+    text-align: left;
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color 0.15s;
+  }
+  .dn-prompt-subpanel-reset:hover { color: #aaa; }
+
+  .dn-subpanel-textarea {
+    width: 100%;
+    background: rgba(255,255,255,0.04);
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px;
+    color: #c0c0c0;
+    font-size: 12px;
+    font-family: inherit;
+    padding: 8px 10px;
+    resize: none;
+    line-height: 1.55;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .dn-subpanel-textarea:focus { border-color: rgba(143,85,249,0.4); }
+  .dn-subpanel-textarea::placeholder { color: #383838; }
+
+  .dn-history-list { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow-y: auto; }
+  .dn-history-list::-webkit-scrollbar { width: 3px; }
+  .dn-history-list::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.10); border-radius: 4px; }
+  .dn-history-item {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    background: none;
+    border: none;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    border-radius: 0;
+    padding: 7px 2px;
+    cursor: pointer;
+    text-align: left;
+    transition: opacity 0.12s;
+  }
+  .dn-history-item:last-child { border-bottom: none; }
+  .dn-history-item:hover { opacity: 0.7; }
+  .dn-history-time {
+    font-size: 10px;
+    color: #555;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+  }
+  .dn-history-preview {
+    font-size: 11px;
+    color: #888;
+    line-height: 1.45;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
   .dn-prompt-text {
     width: 100%;
-    min-height: 260px;
+    min-height: 220px;
     background: rgba(255,255,255,0.04);
     border: 1px solid rgba(255,255,255,0.08);
     border-radius: 10px;
@@ -602,6 +788,7 @@ export const SIDEBAR_CSS = `
     transition: border-color 0.15s;
   }
   .dn-prompt-text:focus { border-color: rgba(143,85,249,0.4); }
+  .dn-prompt-text.edited { border-color: rgba(143,85,249,0.25); }
 
   .dn-copy-btn {
     width: 100%;

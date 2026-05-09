@@ -133,6 +133,7 @@ function mount(): void {
 function activate(): void {
   if (active) return;
   active = true;
+  useStore.getState().initPromptStorage();
   mount();
 
   startSelecting(shadow!, (el, selector, originalStyles) => {
