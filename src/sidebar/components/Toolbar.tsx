@@ -12,12 +12,15 @@ interface Props {
   onToggleResponsive: () => void;
   respWidth: number;
   onRespWidthChange: (w: number) => void;
+  selecting: boolean;
+  onToggleSelecting: () => void;
 }
 
 
 export default function Toolbar({
   onClose, onCollapse, embedMode, onToggleEmbed,
   responsive, onToggleResponsive, respWidth, onRespWidthChange,
+  selecting, onToggleSelecting,
 }: Props) {
   const { pinnedElements, clearAll } = useStore();
 
@@ -55,6 +58,26 @@ export default function Toolbar({
       </div>
 
       <div className="dn-toolbar-controls">
+        <button
+          className={`dn-control-btn ${selecting ? 'active' : ''}`}
+          onClick={onToggleSelecting}
+          title={selecting ? 'Pause element selection' : 'Resume element selection'}
+        >
+          <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+            {selecting ? (
+              <>
+                <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2"/>
+                <circle cx="6" cy="6" r="1.5" fill="currentColor"/>
+              </>
+            ) : (
+              <>
+                <circle cx="6" cy="6" r="4.5" stroke="currentColor" strokeWidth="1.2" strokeDasharray="2.5 2"/>
+                <line x1="3" y1="3" x2="9" y2="9" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+              </>
+            )}
+          </svg>
+          {selecting ? 'Selecting' : 'Paused'}
+        </button>
         <button
           className={`dn-control-btn ${embedMode ? 'active' : ''}`}
           onClick={onToggleEmbed}

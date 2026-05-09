@@ -2,7 +2,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from '../sidebar/App';
 import { SIDEBAR_CSS } from '../sidebar/styles';
-import { startSelecting, stopSelecting, markPinned, unmarkPinned } from './ElementSelector';
+import { startSelecting, stopSelecting, markPinned, unmarkPinned, pauseSelecting, resumeSelecting } from './ElementSelector';
 import { reset } from './StyleInjector';
 import { useStore } from '../sidebar/store';
 import { InlinePopover } from './InlinePopover';
@@ -124,6 +124,7 @@ function mount(): void {
         onEmbedChange={applyEmbed}
         onResponsiveToggle={handleResponsiveToggle}
         onResponsiveWidth={handleResponsiveWidth}
+        onSelectingPause={(paused) => paused ? pauseSelecting() : resumeSelecting()}
       />
     </React.StrictMode>
   );

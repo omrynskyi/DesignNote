@@ -122,6 +122,15 @@ export function stopSelecting(): void {
   document.removeEventListener('click',     handleClick,     true);
 }
 
+export function pauseSelecting(): void {
+  active = false;
+  hideOverlay();
+}
+
+export function resumeSelecting(): void {
+  active = true;
+}
+
 export function markPinned(el: HTMLElement): void {
   el.setAttribute(DN_ATTR, 'true');
   el.style.outline      = `2px solid ${ACCENT}`;

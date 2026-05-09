@@ -11,14 +11,20 @@ interface Props {
   onEmbedChange: (embed: boolean) => void;
   onResponsiveToggle: (enable: boolean, initialWidth: number, onWidth: (w: number) => void) => void;
   onResponsiveWidth: (w: number) => void;
+  onSelectingPause: (paused: boolean) => void;
 }
 
-export default function App({ onClose, onEmbedChange, onResponsiveToggle, onResponsiveWidth }: Props) {
+export default function App({ onClose, onEmbedChange, onResponsiveToggle, onResponsiveWidth, onSelectingPause }: Props) {
   const [tab, setTab] = useState<Tab>('annotations');
   const [embedMode, setEmbedMode] = useState(false);
   const [responsive, setResponsive] = useState(false);
   const [respWidth, setRespWidth] = useState(390);
   const [collapsed, setCollapsed] = useState(false);
+  const [selecting, setSelecting] = useState(true);
+
+  const toggleSelecting = useCallback(() => {
+    setSelecting(prev => { onSelectingPause(prev); return !prev; });
+  }, [onSelectingPause]);
 
   const toggleEmbed = useCallback(() => {
     setEmbedMode(prev => { onEmbedChange(!prev); return !prev; });
@@ -55,6 +61,8 @@ export default function App({ onClose, onEmbedChange, onResponsiveToggle, onResp
           onToggleResponsive={toggleResponsive}
           respWidth={respWidth}
           onRespWidthChange={handleWidthInput}
+          selecting={selecting}
+          onToggleSelecting={toggleSelecting}
         />
         <div className="dn-divider" />
         <div className="dn-tabs">
