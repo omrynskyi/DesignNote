@@ -9,7 +9,7 @@ function injectStyles() {
       position: absolute;
       z-index: 2147483645;
       background: #1a1a1a;
-      border: 1.5px solid #5865F2;
+      border: 1.5px solid #8F55F9;
       border-radius: 10px;
       padding: 10px 12px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.6);
@@ -29,7 +29,7 @@ function injectStyles() {
       line-height: 1.5;
       min-height: 56px;
     }
-    .dn-popover textarea::placeholder { color: #555; }
+    .dn-popover textarea::placeholder { color: #777777; }
     .dn-popover-hint {
       font-size: 11px;
       color: #444;
@@ -66,7 +66,7 @@ export class InlinePopover {
 
     this.div.appendChild(this.textarea);
     this.div.appendChild(hint);
-    document.body.appendChild(this.div);
+    document.documentElement.appendChild(this.div);
     this.reposition(anchor);
 
     this.textarea.focus();

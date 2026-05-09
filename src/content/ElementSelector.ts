@@ -2,9 +2,9 @@ import { generateSelector } from './SelectorGenerator';
 import { captureStyles } from './StyleInjector';
 import { STYLE_PROPS } from '../sidebar/store';
 
-const ACCENT       = '#5865F2';
-const ACCENT_FILL  = 'rgba(88, 101, 242, 0.12)';
-const PINNED_FILL  = 'rgba(88, 101, 242, 0.08)';
+const ACCENT       = '#8F55F9';
+const ACCENT_FILL  = 'rgba(143, 85, 249, 0.12)';
+const PINNED_FILL  = 'rgba(143, 85, 249, 0.08)';
 const DN_ATTR      = 'data-designnote-pinned';
 
 type PinCallback = (el: HTMLElement, selector: string, originalStyles: Record<string, string>) => void;
@@ -28,7 +28,7 @@ function getHoverOverlay(): HTMLDivElement {
       border-radius: 2px; box-sizing: border-box;
       transition: top .06s, left .06s, width .06s, height .06s;
     `;
-    document.body.appendChild(hoverOverlay);
+    document.documentElement.appendChild(hoverOverlay);
   }
   return hoverOverlay;
 }
@@ -60,9 +60,10 @@ function isDesignNoteEvent(e: MouseEvent): boolean {
     if (n === shadowRoot) return true;
     if (n instanceof HTMLElement) {
       return (
-        n.hasAttribute('data-designnote-badge')  ||
-        n.hasAttribute('data-designnote-popover') ||
-        n.hasAttribute('data-designnote-hover')   ||
+        n.hasAttribute('data-designnote-badge')      ||
+        n.hasAttribute('data-designnote-popover')    ||
+        n.hasAttribute('data-designnote-hover')      ||
+        n.hasAttribute('data-designnote-responsive') ||
         n.id === 'designnote-root'
       );
     }
@@ -124,8 +125,8 @@ export function stopSelecting(): void {
 export function markPinned(el: HTMLElement): void {
   el.setAttribute(DN_ATTR, 'true');
   el.style.outline      = `2px solid ${ACCENT}`;
-  el.style.outlineOffset = '0px';
-  el.style.boxShadow    = `inset 0 0 0 9999px ${PINNED_FILL}`;
+  el.style.outlineOffset = '1px';
+  el.style.boxShadow    = `inset 0 0 0 9999px ${PINNED_FILL}, 0 0 12px rgba(143,85,249,0.25)`;
 }
 
 export function unmarkPinned(el: HTMLElement): void {

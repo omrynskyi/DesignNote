@@ -3,8 +3,8 @@ const C_PADDING  = 'rgba(147, 196, 125, 0.5)';
 const C_MARGIN   = 'rgba(246, 178, 107, 0.5)';
 const C_BORDER   = 'rgba(255, 229, 153, 0.55)';
 const C_CONTENT  = 'rgba(111, 168, 220, 0.45)';
-const C_GENERAL  = 'rgba(88, 101, 242, 0.18)';
-const C_FLEX     = 'rgba(99, 179, 255, 0.18)';
+const C_GENERAL  = 'rgba(143, 85, 249, 0.18)';
+const C_FLEX     = 'rgba(143, 85, 249, 0.15)';
 
 let overlay: HTMLDivElement | null = null;
 
@@ -13,7 +13,7 @@ function getOverlay(): HTMLDivElement {
     overlay = document.createElement('div');
     overlay.setAttribute('data-designnote-overlay', 'true');
     overlay.style.cssText = 'position: fixed; top: 0; left: 0; width: 0; height: 0; pointer-events: none; z-index: 2147483644;';
-    document.body.appendChild(overlay);
+    document.documentElement.appendChild(overlay);
   }
   return overlay;
 }
@@ -67,7 +67,7 @@ export function showHighlight(el: HTMLElement, prop: string): void {
     append(chip(r.top, r.right, mr, r.height, C_MARGIN));
   } else if (prop === 'gap') {
     // highlight whole flex container
-    append(chip(r.top, r.left, r.width, r.height, C_FLEX, '2px dashed rgba(99,179,255,0.7)'));
+    append(chip(r.top, r.left, r.width, r.height, C_FLEX, '2px dashed rgba(143,85,249,0.7)'));
   } else if (prop.startsWith('border')) {
     const inset = bw / 2;
     append(chip(r.top - inset, r.left - inset, r.width + bw, bw, C_BORDER));
@@ -83,9 +83,9 @@ export function showHighlight(el: HTMLElement, prop: string): void {
     prop === 'display' || prop === 'flex-direction' || prop === 'justify-content' ||
     prop === 'align-items' || prop === 'align-self' || prop === 'flex-wrap'
   ) {
-    append(chip(r.top, r.left, r.width, r.height, C_FLEX, '2px dashed rgba(99,179,255,0.7)'));
+    append(chip(r.top, r.left, r.width, r.height, C_FLEX, '2px dashed rgba(143,85,249,0.7)'));
   } else if (prop === 'color' || prop === 'font-size' || prop === 'font-weight' || prop === 'line-height' || prop === 'letter-spacing') {
-    append(chip(r.top, r.left, r.width, r.height, C_GENERAL, '2px solid rgba(88,101,242,0.5)'));
+    append(chip(r.top, r.left, r.width, r.height, C_GENERAL, '2px solid rgba(143,85,249,0.5)'));
   } else {
     append(chip(r.top, r.left, r.width, r.height, C_GENERAL));
   }

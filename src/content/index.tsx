@@ -6,6 +6,7 @@ import { startSelecting, stopSelecting, markPinned, unmarkPinned } from './Eleme
 import { reset } from './StyleInjector';
 import { useStore } from '../sidebar/store';
 import { InlinePopover } from './InlinePopover';
+import { enableResponsive, disableResponsive, setSimWidth } from './ResponsiveFrame';
 import { v4 as uuidv4 } from 'uuid';
 
 let container: HTMLElement | null = null;
@@ -36,16 +37,16 @@ function createBadge(id: string, el: HTMLElement, index: number): void {
   badge.style.cssText = `
     position: absolute;
     width: 20px; height: 20px;
-    background: #5865F2; color: #fff;
+    background: #8F55F9; color: #fff;
     border-radius: 50%;
     font-size: 11px; font-weight: 700;
     display: flex; align-items: center; justify-content: center;
     z-index: 2147483646; pointer-events: none;
     font-family: -apple-system, sans-serif;
-    box-shadow: 0 2px 8px rgba(88,101,242,0.5);
+    box-shadow: 0 2px 10px rgba(143,85,249,0.55);
   `;
   badge.textContent = String(index);
-  document.body.appendChild(badge);
+  document.documentElement.appendChild(badge);
   badgeRefs.set(id, { badge, el });
 
   const rect = el.getBoundingClientRect();
@@ -77,6 +78,26 @@ function cancelActivePopoverIfEmpty(): void {
   activePinId = null;
 }
 
+function applyEmbed(embed: boolean): void {
+  document.documentElement.style.marginRight = embed ? '320px' : '';
+  document.documentElement.style.transition = 'margin-right 0.2s ease';
+}
+
+let respWidthSetter: ((w: number) => void) | null = null;
+
+function handleResponsiveToggle(enable: boolean, initialWidth: number, onWidth: (w: number) => void): void {
+  respWidthSetter = onWidth;
+  if (enable) {
+    if (container) enableResponsive(container, initialWidth, (w, _h) => onWidth(w));
+  } else {
+    if (container) disableResponsive(container);
+  }
+}
+
+function handleResponsiveWidth(w: number): void {
+  setSimWidth(w);
+}
+
 function mount(): void {
   if (container) return;
 
@@ -98,7 +119,12 @@ function mount(): void {
   root = ReactDOM.createRoot(appContainer);
   root.render(
     <React.StrictMode>
-      <App onClose={deactivate} />
+      <App
+        onClose={deactivate}
+        onEmbedChange={applyEmbed}
+        onResponsiveToggle={handleResponsiveToggle}
+        onResponsiveWidth={handleResponsiveWidth}
+      />
     </React.StrictMode>
   );
 }
@@ -109,7 +135,6 @@ function activate(): void {
   mount();
 
   startSelecting(shadow!, (el, selector, originalStyles) => {
-    // Cancel previous empty pin before opening a new one
     cancelActivePopoverIfEmpty();
 
     const id = uuidv4();
@@ -127,7 +152,6 @@ function activate(): void {
         activePopover = null;
         activePinId = null;
         if (!text.trim()) {
-          // Escaped without typing → remove the pin
           const el2 = useStore.getState().pinnedElements.find((e) => e.id === id);
           if (el2) {
             reset(el2.el, el2.originalStyles);
@@ -144,16 +168,21 @@ function activate(): void {
 function deactivate(): void {
   if (!active) return;
   active = false;
+  applyEmbed(false);
+  if (container) disableResponsive(container);
   activePopover?.destroy();
   activePopover = null;
   activePinId = null;
   stopSelecting();
+  // Remove all badges and clear refs
+  for (const { badge } of badgeRefs.values()) badge.remove();
+  badgeRefs.clear();
   if (root) { root.unmount(); root = null; }
   if (container) { container.remove(); container = null; shadow = null; }
 }
 
-chrome.runtime.onMessage.addListener((msg: { type: string; active: boolean }) => {
+chrome.runtime.onMessage.addListener((msg: { type: string }) => {
   if (msg.type !== 'toggle') return;
-  if (msg.active) activate();
-  else deactivate();
+  if (active) deactivate();
+  else activate();
 });
