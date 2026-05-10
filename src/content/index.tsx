@@ -13,6 +13,7 @@ let container: HTMLElement | null = null;
 let shadow: ShadowRoot | null = null;
 let root: ReactDOM.Root | null = null;
 let active = false;
+let unsubscribeStore: (() => void) | null = null;
 
 // Badge tracking for scroll-update
 const badgeRefs = new Map<string, { badge: HTMLElement; el: HTMLElement }>();
@@ -68,7 +69,7 @@ function cancelActivePopoverIfEmpty(): void {
   const store = useStore.getState();
   const prev = store.pinnedElements.find((e) => e.id === activePinId);
   if (prev && !prev.comment && Object.keys(prev.modifiedStyles).length === 0) {
-    reset(prev.el, prev.originalStyles);
+    reset(prev.el, prev.modifiedStyles);
     unmarkPinned(prev.el);
     removeBadge(prev.id);
     store.removeElement(prev.id);
@@ -136,6 +137,14 @@ function activate(): void {
   useStore.getState().initPromptStorage();
   mount();
 
+  unsubscribeStore = useStore.subscribe((state) => {
+    if (activePinId && !state.pinnedElements.find((e) => e.id === activePinId)) {
+      activePopover?.destroy();
+      activePopover = null;
+      activePinId = null;
+    }
+  });
+
   startSelecting(shadow!, (el, selector, originalStyles) => {
     cancelActivePopoverIfEmpty();
 
@@ -156,7 +165,7 @@ function activate(): void {
         if (!text.trim()) {
           const el2 = useStore.getState().pinnedElements.find((e) => e.id === id);
           if (el2) {
-            reset(el2.el, el2.originalStyles);
+            reset(el2.el, el2.modifiedStyles);
             unmarkPinned(el2.el);
             removeBadge(id);
             useStore.getState().removeElement(id);
@@ -170,6 +179,8 @@ function activate(): void {
 function deactivate(): void {
   if (!active) return;
   active = false;
+  unsubscribeStore?.();
+  unsubscribeStore = null;
   applyEmbed(false);
   if (container) disableResponsive(container);
   activePopover?.destroy();

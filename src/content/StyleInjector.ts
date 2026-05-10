@@ -2,11 +2,9 @@ export function apply(el: HTMLElement, prop: string, value: string): void {
   (el.style as unknown as Record<string, string>)[prop] = value;
 }
 
-export function reset(el: HTMLElement, originalStyles: Record<string, string>): void {
-  // Clear all inline styles we may have set, then restore originals
-  const allProps = Object.keys(originalStyles);
-  for (const prop of allProps) {
-    (el.style as unknown as Record<string, string>)[prop] = originalStyles[prop];
+export function reset(el: HTMLElement, modifiedStyles: Record<string, string>): void {
+  for (const prop of Object.keys(modifiedStyles)) {
+    (el.style as unknown as Record<string, string>)[prop] = '';
   }
 }
 

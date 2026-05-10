@@ -25,7 +25,7 @@ export default function Toolbar({
 
   function handleClearAll() {
     for (const el of pinnedElements) {
-      reset(el.el, el.originalStyles);
+      reset(el.el, el.modifiedStyles);
       unmarkPinned(el.el);
       document.querySelector(`[data-designnote-badge="${el.id}"]`)?.remove();
     }

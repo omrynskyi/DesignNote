@@ -13,7 +13,7 @@ export default function PinnedElementCard({ element, isSelected, onSelect }: Pro
 
   function handleRemove(e: React.MouseEvent) {
     e.stopPropagation();
-    reset(element.el, element.originalStyles);
+    reset(element.el, element.modifiedStyles);
     unmarkPinned(element.el);
     const badge = document.querySelector(`[data-designnote-badge="${element.id}"]`);
     badge?.remove();
