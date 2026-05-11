@@ -1,4 +1,4 @@
-<img src="logo.png" alt="DesignNote" width="260" />
+![DesignNote](banner.png)
 
 ---
 

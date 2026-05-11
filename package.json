@@ -1,10 +1,10 @@
 {
   "name": "design-note",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "private": true,
   "scripts": {
     "dev": "vite build --watch",
-    "build": "vite build",
+    "build": "vite build && (cd dist && zip -r ../DesignNote-$npm_package_version.zip .)",
     "preview": "vite build"
   },
   "dependencies": {
