@@ -2,7 +2,7 @@
 
 All notable changes to DesignNote will be documented in this file.
 
-## [1.0.1] - 2026-06-30
+## [1.0.2] - 2026-06-30
 
 ### Added
 - **Session Persistence**: Pins and styles now persist across page refreshes using Chrome's session storage
