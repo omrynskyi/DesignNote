@@ -29,6 +29,7 @@ interface Store {
   removeElement: (id: string) => void;
   updateComment: (id: string, comment: string) => void;
   updateStyle: (id: string, prop: string, value: string) => void;
+  revertStyle: (id: string, prop: string) => void;
   setSelected: (id: string | null) => void;
   clearAll: () => void;
 
@@ -75,6 +76,16 @@ export const useStore = create<Store>((set, get) => ({
           ? { ...e, modifiedStyles: { ...e.modifiedStyles, [prop]: value } }
           : e
       ),
+    });
+  },
+
+  revertStyle: (id, prop) => {
+    set({
+      pinnedElements: get().pinnedElements.map((e) => {
+        if (e.id !== id) return e;
+        const { [prop]: _, ...rest } = e.modifiedStyles;
+        return { ...e, modifiedStyles: rest };
+      }),
     });
   },
 

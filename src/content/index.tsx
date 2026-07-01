@@ -3,11 +3,22 @@ import ReactDOM from 'react-dom/client';
 import App from '../sidebar/App';
 import { SIDEBAR_CSS } from '../sidebar/styles';
 import { startSelecting, stopSelecting, markPinned, unmarkPinned, pauseSelecting, resumeSelecting } from './ElementSelector';
-import { reset } from './StyleInjector';
+import { apply, reset } from './StyleInjector';
 import { useStore } from '../sidebar/store';
 import { InlinePopover } from './InlinePopover';
-import { enableResponsive, disableResponsive, setSimWidth } from './ResponsiveFrame';
+import { enableResponsive, disableResponsive, setSimWidth, isResponsiveEnabled } from './ResponsiveFrame';
 import { v4 as uuidv4 } from 'uuid';
+
+const DN_SESSION_KEY = 'dnRestore';
+
+interface SavedPin {
+  id: string;
+  index: number;
+  selector: string;
+  comment: string;
+  originalStyles: Record<string, string>;
+  modifiedStyles: Record<string, string>;
+}
 
 let container: HTMLElement | null = null;
 let shadow: ShadowRoot | null = null;
@@ -79,9 +90,49 @@ function cancelActivePopoverIfEmpty(): void {
   activePinId = null;
 }
 
+let embedActive = false;
+let savedEmbedBody: { width: string; transform: string; overflowX: string } | null = null;
+let embedResizeHandler: (() => void) | null = null;
+
+function placeContainer(): void {
+  if (!container) return;
+  if (embedActive || isResponsiveEnabled()) {
+    document.documentElement.appendChild(container);
+  } else {
+    document.body.appendChild(container);
+  }
+}
+
 function applyEmbed(embed: boolean): void {
-  document.documentElement.style.marginRight = embed ? '320px' : '';
-  document.documentElement.style.transition = 'margin-right 0.2s ease';
+  embedActive = embed;
+  if (embed) {
+    savedEmbedBody = {
+      width: document.body.style.width,
+      transform: document.body.style.transform,
+      overflowX: document.body.style.overflowX,
+    };
+    document.body.style.width = `${window.innerWidth - 320}px`;
+    document.body.style.transform = 'translate(0,0)';
+    document.body.style.overflowX = 'hidden';
+    document.documentElement.style.overflowX = 'hidden';
+    embedResizeHandler = () => {
+      if (embedActive) document.body.style.width = `${window.innerWidth - 320}px`;
+    };
+    window.addEventListener('resize', embedResizeHandler);
+  } else {
+    if (embedResizeHandler) {
+      window.removeEventListener('resize', embedResizeHandler);
+      embedResizeHandler = null;
+    }
+    if (savedEmbedBody) {
+      document.body.style.width = savedEmbedBody.width;
+      document.body.style.transform = savedEmbedBody.transform;
+      document.body.style.overflowX = savedEmbedBody.overflowX;
+      savedEmbedBody = null;
+    }
+    document.documentElement.style.overflowX = '';
+  }
+  placeContainer();
 }
 
 let respWidthSetter: ((w: number) => void) | null = null;
@@ -92,6 +143,8 @@ function handleResponsiveToggle(enable: boolean, initialWidth: number, onWidth: 
     if (container) enableResponsive(container, initialWidth, (w, _h) => onWidth(w));
   } else {
     if (container) disableResponsive(container);
+    // disableResponsive moves container to body; re-correct if embed is also active
+    placeContainer();
   }
 }
 
@@ -122,6 +175,7 @@ function mount(): void {
     <React.StrictMode>
       <App
         onClose={deactivate}
+        onRefresh={refreshPage}
         onEmbedChange={applyEmbed}
         onResponsiveToggle={handleResponsiveToggle}
         onResponsiveWidth={handleResponsiveWidth}
@@ -164,7 +218,7 @@ function activate(): void {
         activePinId = null;
         if (!text.trim()) {
           const el2 = useStore.getState().pinnedElements.find((e) => e.id === id);
-          if (el2) {
+          if (el2 && Object.keys(el2.modifiedStyles).length === 0) {
             reset(el2.el, el2.modifiedStyles);
             unmarkPinned(el2.el);
             removeBadge(id);
@@ -176,12 +230,57 @@ function activate(): void {
   });
 }
 
+function refreshPage(): void {
+  const store = useStore.getState();
+  const saved: SavedPin[] = store.pinnedElements.map(e => ({
+    id: e.id,
+    index: e.index,
+    selector: e.selector,
+    comment: e.comment,
+    originalStyles: e.originalStyles,
+    modifiedStyles: e.modifiedStyles,
+  }));
+  chrome.storage.session.set({ [DN_SESSION_KEY]: saved }, () => {
+    location.reload();
+  });
+}
+
+function restorePins(saved: SavedPin[]): void {
+  const doRestore = () => {
+    const store = useStore.getState();
+    for (const pin of saved) {
+      const el = document.querySelector<HTMLElement>(pin.selector);
+      if (!el) continue;
+      store.addElement({
+        id: pin.id,
+        selector: pin.selector,
+        el,
+        comment: pin.comment,
+        originalStyles: pin.originalStyles,
+        modifiedStyles: pin.modifiedStyles,
+      });
+      for (const [prop, value] of Object.entries(pin.modifiedStyles)) {
+        apply(el, prop, value);
+      }
+      markPinned(el);
+      const index = useStore.getState().pinnedElements.find(e => e.id === pin.id)?.index ?? pin.index;
+      createBadge(pin.id, el, index);
+    }
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', doRestore, { once: true });
+  } else {
+    doRestore();
+  }
+}
+
 function deactivate(): void {
   if (!active) return;
   active = false;
   unsubscribeStore?.();
   unsubscribeStore = null;
-  applyEmbed(false);
+  if (embedActive) applyEmbed(false);
   if (container) disableResponsive(container);
   activePopover?.destroy();
   activePopover = null;
@@ -198,4 +297,14 @@ chrome.runtime.onMessage.addListener((msg: { type: string }) => {
   if (msg.type !== 'toggle') return;
   if (active) deactivate();
   else activate();
+});
+
+// Auto-restore after a designnote-initiated page refresh
+chrome.storage.session.get([DN_SESSION_KEY], (data) => {
+  const saved = data[DN_SESSION_KEY] as SavedPin[] | undefined;
+  if (saved?.length) {
+    chrome.storage.session.remove([DN_SESSION_KEY]);
+    activate();
+    restorePins(saved);
+  }
 });

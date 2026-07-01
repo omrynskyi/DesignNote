@@ -1,10 +1,13 @@
+import { useState } from 'react';
+import { Contrast } from 'lucide-react';
 import logoUrl from '../../assets/logo-inline';
 import { useStore } from '../store';
-import { reset } from '../../content/StyleInjector';
+import { apply, reset } from '../../content/StyleInjector';
 import { unmarkPinned } from '../../content/ElementSelector';
 
 interface Props {
   onClose: () => void;
+  onRefresh: () => void;
   onCollapse: () => void;
   embedMode: boolean;
   onToggleEmbed: () => void;
@@ -17,11 +20,29 @@ interface Props {
 }
 
 export default function Toolbar({
-  onClose, onCollapse, embedMode, onToggleEmbed,
+  onClose, onRefresh, onCollapse, embedMode, onToggleEmbed,
   responsive, onToggleResponsive,
   selecting, onToggleSelecting,
 }: Props) {
   const { pinnedElements, clearAll } = useStore();
+  const [showingBefore, setShowingBefore] = useState(false);
+  const hasChanges = pinnedElements.some(e => Object.keys(e.modifiedStyles).length > 0);
+
+  function toggleBeforeAfter() {
+    const next = !showingBefore;
+    setShowingBefore(next);
+    for (const el of pinnedElements) {
+      if (next) {
+        for (const prop of Object.keys(el.modifiedStyles)) {
+          apply(el.el, prop, el.originalStyles[prop] ?? '');
+        }
+      } else {
+        for (const [prop, value] of Object.entries(el.modifiedStyles)) {
+          apply(el.el, prop, value);
+        }
+      }
+    }
+  }
 
   function handleClearAll() {
     for (const el of pinnedElements) {
@@ -60,7 +81,21 @@ export default function Toolbar({
               <path d="M5.5 11v1.5M8.5 11v1.5M4 12.5h6" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round"/>
             </svg>
           </button>
+          <button
+            className={`dn-view-btn ${showingBefore ? 'active' : ''} ${!hasChanges ? 'dn-view-btn--faded' : ''}`}
+            onClick={toggleBeforeAfter}
+            title={showingBefore ? 'Showing before — click to restore changes' : 'Preview before changes'}
+            disabled={!hasChanges}
+          >
+            <Contrast size={14} strokeWidth={1.6} />
+          </button>
           <div className="dn-toolbar-sep" />
+          <button className="dn-btn-icon" onClick={onRefresh} title="Refresh page (preserves annotations)">
+            <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <path d="M10.5 6a4.5 4.5 0 1 1-1.06-2.9" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M10.5 1.5V3.5H8.5" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
           <button className="dn-btn-icon" onClick={onCollapse} title="Minimize">
             <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
               <path d="M10 6L6 2M10 6L6 10M10 6H2" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round"/>

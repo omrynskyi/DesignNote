@@ -135,7 +135,7 @@ export function markPinned(el: HTMLElement): void {
   el.setAttribute(DN_ATTR, 'true');
   el.style.outline      = `2px solid ${ACCENT}`;
   el.style.outlineOffset = '1px';
-  el.style.boxShadow    = `inset 0 0 0 9999px ${PINNED_FILL}, 0 0 12px rgba(143,85,249,0.25)`;
+  el.style.boxShadow    = `0 0 12px rgba(143,85,249,0.25)`;
 }
 
 export function unmarkPinned(el: HTMLElement): void {

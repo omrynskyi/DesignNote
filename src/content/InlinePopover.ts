@@ -62,7 +62,7 @@ export class InlinePopover {
 
     const hint = document.createElement('div');
     hint.className = 'dn-popover-hint';
-    hint.textContent = 'Esc to save · Esc without text removes this note';
+    hint.textContent = 'Esc to save · Esc without text or changes removes';
 
     this.div.appendChild(this.textarea);
     this.div.appendChild(hint);

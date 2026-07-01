@@ -110,6 +110,7 @@ export const SIDEBAR_CSS = `
   }
   .dn-view-btn:hover { color: #999; background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.09); }
   .dn-view-btn.active { color: #c49aff; background: rgba(143,85,249,0.12); border-color: rgba(143,85,249,0.30); }
+  .dn-view-btn--faded { opacity: 0.3; cursor: default; }
 
   .dn-toolbar-sep {
     width: 1px;
@@ -809,6 +810,42 @@ export const SIDEBAR_CSS = `
   .dn-copy-btn.copied {
     background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
     box-shadow: 0 4px 20px rgba(34,197,94,0.35);
+  }
+
+  /* Modified field indicator + revert button */
+  .dn-field--modified .dn-scrub { border-color: rgba(143,85,249,0.45); }
+  .dn-field--modified .dn-color-field { border-color: rgba(143,85,249,0.45); }
+  .dn-field--modified .dn-select-sm { border-color: rgba(143,85,249,0.45); }
+  .dn-revert-btn {
+    flex-shrink: 0;
+    background: none;
+    border: none;
+    color: #7a52c4;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 2px 3px;
+    border-radius: 4px;
+    line-height: 1;
+    opacity: 0;
+    transition: color 0.12s, opacity 0.12s, background 0.12s;
+  }
+  .dn-revert-btn--visible { opacity: 1; }
+  .dn-field--modified:hover .dn-revert-btn { opacity: 1; }
+  .dn-revert-btn:hover { color: #c49aff; background: rgba(143,85,249,0.15); }
+
+  /* Changes count pill in card */
+  .dn-changes-summary { padding: 2px 0; }
+  .dn-changes-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    background: rgba(143,85,249,0.10);
+    border: 1px solid rgba(143,85,249,0.22);
+    border-radius: 20px;
+    color: #a878f8;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px 2px 6px;
   }
 
   /* Buttons */

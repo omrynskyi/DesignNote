@@ -90,16 +90,25 @@ interface FieldProps {
   prop: StyleProp;
   el: HTMLElement;
   wide?: boolean;
+  modified?: boolean;
+  onRevert?: () => void;
 }
 
-function Field({ children, prop, el, wide }: FieldProps) {
+function Field({ children, prop, el, wide, modified, onRevert }: FieldProps) {
   return (
     <div
-      className={`dn-field${wide ? ' dn-field-wide' : ''}`}
+      className={`dn-field${wide ? ' dn-field-wide' : ''}${modified ? ' dn-field--modified' : ''}`}
       onMouseEnter={() => showHighlight(el, prop)}
       onMouseLeave={() => hideHighlight()}
     >
       {children}
+      {modified && (
+        <button
+          className="dn-revert-btn"
+          title="Revert to original"
+          onClick={(e) => { e.stopPropagation(); onRevert?.(); }}
+        >↺</button>
+      )}
     </div>
   );
 }
@@ -136,12 +145,14 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 // ─── SpacingBox ────────────────────────────────────────────────────────────
 
-function SpacingBox({ label: lbl, sides, vals, onChange, el }: {
+function SpacingBox({ label: lbl, sides, vals, onChange, el, isModified, onRevert }: {
   label: string;
   sides: ['top'|'right'|'bottom'|'left', StyleProp][];
   vals: string[];
   onChange: (prop: StyleProp, v: string) => void;
   el: HTMLElement;
+  isModified: (prop: StyleProp) => boolean;
+  onRevert: (prop: StyleProp) => void;
 }) {
   const [, topProp] = sides[0]; const [, rightProp] = sides[1];
   const [, botProp] = sides[2]; const [, leftProp] = sides[3];
@@ -150,24 +161,24 @@ function SpacingBox({ label: lbl, sides, vals, onChange, el }: {
       <div className="dn-spacing-label">{lbl}</div>
       <div className="dn-spacing-grid">
         <div className="dn-sp-top">
-          <Field prop={topProp} el={el}>
+          <Field prop={topProp} el={el} modified={isModified(topProp)} onRevert={() => onRevert(topProp)}>
             <ScrubInput value={vals[0]} onChange={v => onChange(topProp, v)} min={0}
               onHighlightStart={() => showHighlight(el, topProp)} onHighlightEnd={hideHighlight} />
           </Field>
         </div>
         <div className="dn-sp-middle">
-          <Field prop={leftProp} el={el}>
+          <Field prop={leftProp} el={el} modified={isModified(leftProp)} onRevert={() => onRevert(leftProp)}>
             <ScrubInput value={vals[3]} onChange={v => onChange(leftProp, v)} min={0}
               onHighlightStart={() => showHighlight(el, leftProp)} onHighlightEnd={hideHighlight} />
           </Field>
           <div className="dn-sp-center" />
-          <Field prop={rightProp} el={el}>
+          <Field prop={rightProp} el={el} modified={isModified(rightProp)} onRevert={() => onRevert(rightProp)}>
             <ScrubInput value={vals[1]} onChange={v => onChange(rightProp, v)} min={0}
               onHighlightStart={() => showHighlight(el, rightProp)} onHighlightEnd={hideHighlight} />
           </Field>
         </div>
         <div className="dn-sp-bot">
-          <Field prop={botProp} el={el}>
+          <Field prop={botProp} el={el} modified={isModified(botProp)} onRevert={() => onRevert(botProp)}>
             <ScrubInput value={vals[2]} onChange={v => onChange(botProp, v)} min={0}
               onHighlightStart={() => showHighlight(el, botProp)} onHighlightEnd={hideHighlight} />
           </Field>
@@ -232,16 +243,27 @@ const ALIGN = [
 ];
 
 export default function StyleEditor({ element }: Props) {
-  const { updateStyle } = useStore();
+  const { updateStyle, revertStyle } = useStore();
   const el = element.el;
 
   function val(prop: StyleProp): string {
     return element.modifiedStyles[prop] ?? element.originalStyles[prop] ?? '';
   }
 
+  function isModified(prop: StyleProp): boolean {
+    const v = element.modifiedStyles[prop];
+    return v !== undefined && v !== '' && v !== (element.originalStyles[prop] ?? '');
+  }
+
   function set(prop: StyleProp, value: string) {
     apply(el, prop, value);
     updateStyle(element.id, prop, value);
+  }
+
+  function revert(prop: StyleProp) {
+    const original = element.originalStyles[prop] ?? '';
+    apply(el, prop, original);
+    revertStyle(element.id, prop);
   }
 
   function scrub(prop: StyleProp, min?: number) {
@@ -256,6 +278,14 @@ export default function StyleEditor({ element }: Props) {
     );
   }
 
+  function F({ children, prop, wide }: { children: React.ReactNode; prop: StyleProp; wide?: boolean }) {
+    return (
+      <Field prop={prop} el={el} wide={wide} modified={isModified(prop)} onRevert={() => revert(prop)}>
+        {children}
+      </Field>
+    );
+  }
+
   return (
     <div className="dn-style-editor">
 
@@ -265,104 +295,104 @@ export default function StyleEditor({ element }: Props) {
           label="Padding"
           sides={[['top','padding-top'],['right','padding-right'],['bottom','padding-bottom'],['left','padding-left']]}
           vals={[val('padding-top'), val('padding-right'), val('padding-bottom'), val('padding-left')]}
-          onChange={set} el={el}
+          onChange={set} el={el} isModified={isModified} onRevert={revert}
         />
         <SpacingBox
           label="Margin"
           sides={[['top','margin-top'],['right','margin-right'],['bottom','margin-bottom'],['left','margin-left']]}
           vals={[val('margin-top'), val('margin-right'), val('margin-bottom'), val('margin-left')]}
-          onChange={set} el={el}
+          onChange={set} el={el} isModified={isModified} onRevert={revert}
         />
         <div className="dn-row" style={{ marginTop: 6 }}>
-          <Field prop="gap" el={el} wide>
+          <F prop="gap" wide>
             <span className="dn-field-icon">Gap</span>
             {scrub('gap', 0)}
-          </Field>
+          </F>
         </div>
       </Section>
 
       {/* ── DIMENSIONS ── */}
       <Section title="Dimensions">
         <div className="dn-row">
-          <Field prop="width" el={el}>
+          <F prop="width">
             <span className="dn-field-icon">W</span>{scrub('width', 0)}
-          </Field>
-          <Field prop="height" el={el}>
+          </F>
+          <F prop="height">
             <span className="dn-field-icon">H</span>{scrub('height', 0)}
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 4 }}>
-          <Field prop="min-width" el={el}>
+          <F prop="min-width">
             <span className="dn-field-icon" style={{ fontSize: 9 }}>Min W</span>{scrub('min-width', 0)}
-          </Field>
-          <Field prop="max-width" el={el}>
+          </F>
+          <F prop="max-width">
             <span className="dn-field-icon" style={{ fontSize: 9 }}>Max W</span>{scrub('max-width', 0)}
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 4 }}>
-          <Field prop="min-height" el={el}>
+          <F prop="min-height">
             <span className="dn-field-icon" style={{ fontSize: 9 }}>Min H</span>{scrub('min-height', 0)}
-          </Field>
-          <Field prop="max-height" el={el}>
+          </F>
+          <F prop="max-height">
             <span className="dn-field-icon" style={{ fontSize: 9 }}>Max H</span>{scrub('max-height', 0)}
-          </Field>
+          </F>
         </div>
       </Section>
 
       {/* ── TYPOGRAPHY ── */}
       <Section title="Typography">
         <div className="dn-row">
-          <Field prop="font-size" el={el}>
+          <F prop="font-size">
             <span className="dn-field-icon">A</span>{scrub('font-size', 1)}
-          </Field>
-          <Field prop="font-weight" el={el}>
+          </F>
+          <F prop="font-weight">
             <span className="dn-field-icon">W</span>
             <select className="dn-select-sm" value={val('font-weight')} onChange={e => set('font-weight', e.target.value)}>
               {['100','200','300','400','500','600','700','800','900'].map(w => <option key={w}>{w}</option>)}
             </select>
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 4 }}>
-          <Field prop="line-height" el={el}>
+          <F prop="line-height">
             <span className="dn-field-icon">↕</span>{scrub('line-height', 0)}
-          </Field>
-          <Field prop="letter-spacing" el={el}>
+          </F>
+          <F prop="letter-spacing">
             <span className="dn-field-icon">AV</span>{scrub('letter-spacing')}
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 6 }}>
-          <Field prop="color" el={el} wide>
+          <F prop="color" wide>
             <ColorField value={val('color')} onChange={v => set('color', v)} />
-          </Field>
+          </F>
         </div>
       </Section>
 
       {/* ── FILL ── */}
       <Section title="Fill">
-        <Field prop="background-color" el={el} wide>
+        <F prop="background-color" wide>
           <ColorField value={val('background-color')} onChange={v => set('background-color', v)} />
-        </Field>
+        </F>
       </Section>
 
       {/* ── BORDER ── */}
       <Section title="Border">
         <div className="dn-row">
-          <Field prop="border-radius" el={el}>
+          <F prop="border-radius">
             <span className="dn-field-icon">⌒</span>{scrub('border-radius', 0)}
-          </Field>
-          <Field prop="border-width" el={el}>
+          </F>
+          <F prop="border-width">
             <span className="dn-field-icon">W</span>{scrub('border-width', 0)}
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 6 }}>
-          <Field prop="border-color" el={el} wide>
+          <F prop="border-color" wide>
             <ColorField value={val('border-color')} onChange={v => set('border-color', v)} />
-          </Field>
-          <Field prop="border-style" el={el}>
+          </F>
+          <F prop="border-style">
             <select className="dn-select-sm" value={val('border-style')} onChange={e => set('border-style', e.target.value)}>
               {['none','solid','dashed','dotted'].map(s => <option key={s}>{s}</option>)}
             </select>
-          </Field>
+          </F>
         </div>
       </Section>
 
@@ -370,60 +400,60 @@ export default function StyleEditor({ element }: Props) {
       <Section title="Flexbox">
         <div className="dn-row">
           <span className="dn-field-icon" style={{ flexShrink: 0 }}>Dir</span>
-          <Field prop="flex-direction" el={el} wide>
+          <F prop="flex-direction" wide>
             <IconBtns value={val('flex-direction')} options={FLEX_DIR} onChange={v => set('flex-direction', v)} />
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 4 }}>
           <span className="dn-field-icon" style={{ flexShrink: 0 }}>J</span>
-          <Field prop="justify-content" el={el} wide>
+          <F prop="justify-content" wide>
             <IconBtns value={val('justify-content')} options={JUSTIFY} onChange={v => set('justify-content', v)} />
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 4 }}>
           <span className="dn-field-icon" style={{ flexShrink: 0 }}>A</span>
-          <Field prop="align-items" el={el} wide>
+          <F prop="align-items" wide>
             <IconBtns value={val('align-items')} options={ALIGN} onChange={v => set('align-items', v)} />
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 4 }}>
           <span className="dn-field-icon" style={{ flexShrink: 0 }}>Wrap</span>
-          <Field prop="flex-wrap" el={el} wide>
+          <F prop="flex-wrap" wide>
             <IconBtns
               value={val('flex-wrap')}
               options={[{ label: 'No wrap', value: 'nowrap' }, { label: 'Wrap', value: 'wrap' }]}
               onChange={v => set('flex-wrap', v)}
             />
-          </Field>
+          </F>
         </div>
       </Section>
 
       {/* ── LAYOUT ── */}
       <Section title="Layout">
         <div className="dn-row">
-          <Field prop="display" el={el}>
+          <F prop="display">
             <span className="dn-field-icon">Disp</span>
             <select className="dn-select-sm" value={val('display')} onChange={e => set('display', e.target.value)}>
               {['block','flex','grid','inline','inline-flex','inline-block','none'].map(d => <option key={d}>{d}</option>)}
             </select>
-          </Field>
-          <Field prop="overflow" el={el}>
+          </F>
+          <F prop="overflow">
             <span className="dn-field-icon">Ovfl</span>
             <select className="dn-select-sm" value={val('overflow')} onChange={e => set('overflow', e.target.value)}>
               {['visible','hidden','scroll','auto'].map(d => <option key={d}>{d}</option>)}
             </select>
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 4 }}>
-          <Field prop="opacity" el={el}>
+          <F prop="opacity">
             <span className="dn-field-icon">Opa</span>{scrub('opacity')}
-          </Field>
-          <Field prop="z-index" el={el}>
+          </F>
+          <F prop="z-index">
             <span className="dn-field-icon">Z</span>{scrub('z-index')}
-          </Field>
+          </F>
         </div>
         <div className="dn-row" style={{ marginTop: 4 }}>
-          <Field prop="position" el={el} wide>
+          <F prop="position" wide>
             <span className="dn-field-icon">Pos</span>
             <IconBtns
               value={val('position')}
@@ -435,22 +465,27 @@ export default function StyleEditor({ element }: Props) {
               ]}
               onChange={v => set('position', v)}
             />
-          </Field>
+          </F>
         </div>
       </Section>
 
       {/* ── SHADOW ── */}
       <Section title="Shadow">
-        <div className="dn-shadow-row">
-          {SHADOW_PRESETS.map(p => (
-            <button
-              key={p.label}
-              className={`dn-shadow-btn ${val('box-shadow') === p.value ? 'active' : ''}`}
-              onClick={() => set('box-shadow', p.value)}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
+          <div className="dn-shadow-row" style={{ flex: 1 }}>
+            {SHADOW_PRESETS.map(p => (
+              <button
+                key={p.label}
+                className={`dn-shadow-btn ${val('box-shadow') === p.value ? 'active' : ''}`}
+                onClick={() => set('box-shadow', p.value)}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+          {isModified('box-shadow') && (
+            <button className="dn-revert-btn dn-revert-btn--visible" title="Revert shadow" onClick={() => revert('box-shadow')}>↺</button>
+          )}
         </div>
       </Section>
 

@@ -20,7 +20,9 @@ export default function PinnedElementCard({ element, isSelected, onSelect }: Pro
     removeElement(element.id);
   }
 
-  const hasChanges = Object.keys(element.modifiedStyles).length > 0;
+  const changeCount = Object.entries(element.modifiedStyles)
+    .filter(([prop, v]) => v !== '' && v !== (element.originalStyles[prop] ?? ''))
+    .length;
 
   return (
     <div
@@ -30,14 +32,24 @@ export default function PinnedElementCard({ element, isSelected, onSelect }: Pro
       <div className="dn-card-header">
         <span className="dn-badge">{element.index}</span>
         <span className="dn-selector">{element.selector}</span>
-        {hasChanges && <span className="dn-changed-dot" title="Has style changes" />}
         <button className="dn-remove" onClick={handleRemove} title="Remove">✕</button>
       </div>
       {element.comment && (
         <div className="dn-comment-text">{element.comment}</div>
       )}
-      {!element.comment && (
+      {!element.comment && changeCount === 0 && (
         <div className="dn-comment-empty">No comment</div>
+      )}
+      {!element.comment && changeCount > 0 && (
+        <div className="dn-changes-summary">
+          <span className="dn-changes-pill">
+            <svg width="9" height="9" viewBox="0 0 9 9" fill="none" style={{ flexShrink: 0 }}>
+              <circle cx="4.5" cy="4.5" r="3.5" fill="rgba(143,85,249,0.5)" />
+              <circle cx="4.5" cy="4.5" r="1.5" fill="#c49aff" />
+            </svg>
+            {changeCount} change{changeCount !== 1 ? 's' : ''}
+          </span>
+        </div>
       )}
     </div>
   );

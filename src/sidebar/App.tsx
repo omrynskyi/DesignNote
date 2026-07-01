@@ -8,13 +8,14 @@ type Tab = 'annotations' | 'prompt';
 
 interface Props {
   onClose: () => void;
+  onRefresh: () => void;
   onEmbedChange: (embed: boolean) => void;
   onResponsiveToggle: (enable: boolean, initialWidth: number, onWidth: (w: number) => void) => void;
   onResponsiveWidth: (w: number) => void;
   onSelectingPause: (paused: boolean) => void;
 }
 
-export default function App({ onClose, onEmbedChange, onResponsiveToggle, onResponsiveWidth, onSelectingPause }: Props) {
+export default function App({ onClose, onRefresh, onEmbedChange, onResponsiveToggle, onResponsiveWidth, onSelectingPause }: Props) {
   const [tab, setTab] = useState<Tab>('annotations');
   const [embedMode, setEmbedMode] = useState(false);
   const [responsive, setResponsive] = useState(false);
@@ -54,6 +55,7 @@ export default function App({ onClose, onEmbedChange, onResponsiveToggle, onResp
       <div className={`dn-sidebar${collapsed ? ' dn-sidebar--collapsed' : ''}`}>
         <Toolbar
           onClose={onClose}
+          onRefresh={onRefresh}
           onCollapse={() => setCollapsed(true)}
           embedMode={embedMode}
           onToggleEmbed={toggleEmbed}
